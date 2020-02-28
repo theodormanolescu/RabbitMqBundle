@@ -3,7 +3,9 @@
 namespace OldSound\RabbitMqBundle\Tests\RabbitMq;
 
 use OldSound\RabbitMqBundle\RabbitMq\Binding;
-use PHPUnit\Framework\Assert;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPConnection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class BindingTest extends TestCase
@@ -15,18 +17,18 @@ class BindingTest extends TestCase
     }
 
     /**
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject|AMQPConnection
      */
     protected function prepareAMQPConnection()
     {
-        return $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+        return $this->getMockBuilder(AMQPConnection::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
 
     protected function prepareAMQPChannel($channelId = null)
     {
-        $channelMock = $this->getMockBuilder('\PhpAmqpLib\Channel\AMQPChannel')
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -47,11 +49,11 @@ class BindingTest extends TestCase
         $ch->expects($this->once())
             ->method('queue_bind')
             ->will($this->returnCallback(function ($d, $s, $k, $n, $a) use ($destination, $source, $key) {
-                Assert::assertSame($destination, $d);
-                Assert::assertSame($source, $s);
-                Assert::assertSame($key, $k);
-                Assert::assertFalse($n);
-                Assert::assertNull($a);
+                $this->assertEquals($destination, $d);
+                $this->assertEquals($source, $s);
+                $this->assertEquals($key, $k);
+                $this->assertFalse($n);
+                $this->assertNull($a);
             }));
 
         $binding = $this->getBinding($con, $ch);
@@ -72,11 +74,11 @@ class BindingTest extends TestCase
         $ch->expects($this->once())
             ->method('exchange_bind')
             ->will($this->returnCallback(function ($d, $s, $k, $n, $a) use ($destination, $source, $key) {
-                Assert::assertSame($destination, $d);
-                Assert::assertSame($source, $s);
-                Assert::assertSame($key, $k);
-                Assert::assertFalse($n);
-                Assert::assertNull($a);
+                $this->assertEquals($destination, $d);
+                $this->assertEquals($source, $s);
+                $this->assertEquals($key, $k);
+                $this->assertFalse($n);
+                $this->assertNull($a);
             }));
 
         $binding = $this->getBinding($con, $ch);

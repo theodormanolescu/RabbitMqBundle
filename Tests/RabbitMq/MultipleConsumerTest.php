@@ -247,8 +247,8 @@ class MultipleConsumerTest extends TestCase
         $this->amqpChannel->expects($this->any())
             ->method('basic_reject')
             ->will($this->returnCallback(function ($delivery_tag, $requeue) use ($expectedMethod, $expectedRequeue) {
-                Assert::assertSame($expectedMethod, 'basic_reject'); // Check if this function should be called.
-                Assert::assertSame($requeue, $expectedRequeue); // Check if the message should be requeued.
+                $this->assertEquals($expectedMethod, 'basic_reject');
+                $this->assertEquals($requeue, $expectedRequeue);// Check if the message should be requeued.
             }));
 
         $this->amqpChannel->expects($this->any())

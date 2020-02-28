@@ -4,24 +4,27 @@ namespace OldSound\RabbitMqBundle\Tests\RabbitMq;
 
 use OldSound\RabbitMqBundle\RabbitMq\RpcClient;
 use PhpAmqpLib\Message\AMQPMessage;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class RpcClientTest extends TestCase
 {
     public function testProcessMessageWithCustomUnserializer()
     {
         /** @var RpcClient $client */
-        $client = $this->getMockBuilder('\OldSound\RabbitMqBundle\RabbitMq\RpcClient')
-            ->setMethods(array('sendReply', 'maybeStopConsumer'))
+        $client = $this->getMockBuilder(RpcClient::class)
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
         /** @var AMQPMessage $message */
-        $message = $this->getMockBuilder('\PhpAmqpLib\Message\AMQPMessage')
-            ->setMethods(array('get'))
-            ->setConstructorArgs(array('message'))
+        $message = $this->getMockBuilder(AMQPMessage::class)
+            ->setMethods(['get'])
+            ->setConstructorArgs(['message'])
             ->getMock();
-        $serializer = $this->getMockBuilder('\Symfony\Component\Serializer\SerializerInterface')
-            ->setMethods(array('serialize', 'deserialize'))
+        /** @var MockObject|SerializerInterface $serializer */
+        $serializer = $this->getMockBuilder(SerializerInterface::class)
+            ->setMethods(['serialize', 'deserialize'])
             ->getMock();
         $serializer->expects($this->once())->method('deserialize')->with('message', 'json', null);
         $client->initClient(true);
@@ -34,15 +37,15 @@ class RpcClientTest extends TestCase
     public function testProcessMessageWithNotifyMethod()
     {
         /** @var RpcClient $client */
-        $client = $this->getMockBuilder('\OldSound\RabbitMqBundle\RabbitMq\RpcClient')
-            ->setMethods(array('sendReply', 'maybeStopConsumer'))
+        $client = $this->getMockBuilder(RpcClient::class)
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
         $expectedNotify = 'message';
         /** @var AMQPMessage $message */
-        $message = $this->getMockBuilder('\PhpAmqpLib\Message\AMQPMessage')
-            ->setMethods(array('get'))
-            ->setConstructorArgs(array($expectedNotify))
+        $message = $this->getMockBuilder(AMQPMessage::class)
+            ->setMethods(['get'])
+            ->setConstructorArgs([$expectedNotify])
             ->getMock();
         $notified = false;
         $client->notify(function ($message) use (&$notified) {
@@ -55,17 +58,15 @@ class RpcClientTest extends TestCase
         $this->assertSame($expectedNotify, $notified);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testInvalidParameterOnNotify()
     {
         /** @var RpcClient $client */
-        $client = $this->getMockBuilder('\OldSound\RabbitMqBundle\RabbitMq\RpcClient')
-            ->setMethods(array('sendReply', 'maybeStopConsumer'))
+        $client = $this->getMockBuilder(RpcClient::class)
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
 
+        $this->expectException(\InvalidArgumentException::class);
         $client->notify('not a callable');
     }
 }

@@ -2,8 +2,13 @@
 
 namespace OldSound\RabbitMqBundle\Tests\RabbitMq;
 
+use OldSound\RabbitMqBundle\RabbitMq\BaseAmqp;
 use OldSound\RabbitMqBundle\RabbitMq\BaseConsumer;
+use OldSound\RabbitMqBundle\RabbitMq\DequeuerInterface;
+use OldSound\RabbitMqBundle\Tests\Helper\ObjectReflection;
+use PhpAmqpLib\Connection\AMQPConnection;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 
 class BaseConsumerTest extends TestCase
 {
@@ -12,23 +17,23 @@ class BaseConsumerTest extends TestCase
 
     protected function setUp(): void
     {
-        $amqpConnection = $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->consumer = $this->getMockBuilder('\OldSound\RabbitMqBundle\RabbitMq\BaseConsumer')
+        $this->consumer = $this->getMockBuilder(BaseConsumer::class)
             ->setConstructorArgs(array($amqpConnection))
             ->getMockForAbstractClass();
     }
 
     public function testItExtendsBaseAmqpInterface()
     {
-        $this->assertInstanceOf('OldSound\RabbitMqBundle\RabbitMq\BaseAmqp', $this->consumer);
+        $this->assertInstanceOf(BaseAmqp::class, $this->consumer);
     }
 
     public function testItImplementsDequeuerInterface()
     {
-        $this->assertInstanceOf('OldSound\RabbitMqBundle\RabbitMq\DequeuerInterface', $this->consumer);
+        $this->assertInstanceOf(DequeuerInterface::class, $this->consumer);
     }
 
     public function testItsIdleTimeoutIsMutable()
@@ -45,10 +50,13 @@ class BaseConsumerTest extends TestCase
         $this->assertEquals(43, $this->consumer->getIdleTimeoutExitCode());
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testForceStopConsumer()
     {
-        $this->assertAttributeEquals(false, 'forceStop', $this->consumer);
+        $this->assertFalse(ObjectReflection::getValue($this->consumer, 'forceStop'));
         $this->consumer->forceStopConsumer();
-        $this->assertAttributeEquals(true, 'forceStop', $this->consumer);
+        $this->assertTrue(ObjectReflection::getValue($this->consumer, 'forceStop'));
     }
 }
