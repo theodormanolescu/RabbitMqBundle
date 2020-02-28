@@ -14,17 +14,17 @@ class RpcClientTest extends TestCase
     {
         /** @var RpcClient $client */
         $client = $this->getMockBuilder(RpcClient::class)
-            ->addMethods(['sendReply', 'maybeStopConsumer'])
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
         /** @var AMQPMessage $message */
         $message = $this->getMockBuilder(AMQPMessage::class)
-            ->onlyMethods(['get'])
+            ->setMethods(['get'])
             ->setConstructorArgs(['message'])
             ->getMock();
         /** @var MockObject|SerializerInterface $serializer */
         $serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->onlyMethods(['serialize', 'deserialize'])
+            ->setMethods(['serialize', 'deserialize'])
             ->getMock();
         $serializer->expects($this->once())->method('deserialize')->with('message', 'json', null);
         $client->initClient(true);
@@ -38,13 +38,13 @@ class RpcClientTest extends TestCase
     {
         /** @var RpcClient $client */
         $client = $this->getMockBuilder(RpcClient::class)
-            ->addMethods(['sendReply', 'maybeStopConsumer'])
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
         $expectedNotify = 'message';
         /** @var AMQPMessage $message */
         $message = $this->getMockBuilder(AMQPMessage::class)
-            ->onlyMethods(['get'])
+            ->setMethods(['get'])
             ->setConstructorArgs([$expectedNotify])
             ->getMock();
         $notified = false;
@@ -62,7 +62,7 @@ class RpcClientTest extends TestCase
     {
         /** @var RpcClient $client */
         $client = $this->getMockBuilder(RpcClient::class)
-            ->addMethods(['sendReply', 'maybeStopConsumer'])
+            ->setMethods(['sendReply', 'maybeStopConsumer'])
             ->disableOriginalConstructor()
             ->getMock();
 
