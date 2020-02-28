@@ -5,6 +5,8 @@ namespace OldSound\RabbitMqBundle\Tests\Event;
 use OldSound\RabbitMqBundle\Event\OnIdleEvent;
 use OldSound\RabbitMqBundle\RabbitMq\Consumer;
 use PHPUnit\Framework\TestCase;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPConnection;
 
 /**
  * Class OnIdleEventTest
@@ -13,13 +15,13 @@ use PHPUnit\Framework\TestCase;
  */
 class OnIdleEventTest extends TestCase
 {
-    protected function getConsumer()
+    protected function getConsumer(): Consumer
     {
         return new Consumer(
-            $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+            $this->getMockBuilder(AMQPConnection::class)
                 ->disableOriginalConstructor()
                 ->getMock(),
-            $this->getMockBuilder('\PhpAmqpLib\Channel\AMQPChannel')
+            $this->getMockBuilder(AMQPChannel::class)
                 ->disableOriginalConstructor()
                 ->getMock()
         );

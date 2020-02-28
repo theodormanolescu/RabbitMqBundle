@@ -4,6 +4,8 @@ namespace OldSound\RabbitMqBundle\Tests\Event;
 
 use OldSound\RabbitMqBundle\Event\BeforeProcessingMessageEvent;
 use OldSound\RabbitMqBundle\RabbitMq\Consumer;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\TestCase;
 
@@ -14,13 +16,16 @@ use PHPUnit\Framework\TestCase;
  */
 class BeforeProcessingMessageEventTest extends TestCase
 {
-    protected function getConsumer()
+    /**
+     * @return Consumer
+     */
+    protected function getConsumer(): Consumer
     {
         return new Consumer(
-            $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+            $this->getMockBuilder(AMQPConnection::class)
                 ->disableOriginalConstructor()
                 ->getMock(),
-            $this->getMockBuilder('\PhpAmqpLib\Channel\AMQPChannel')
+            $this->getMockBuilder(AMQPChannel::class)
                 ->disableOriginalConstructor()
                 ->getMock()
         );

@@ -6,12 +6,14 @@ use OldSound\RabbitMqBundle\Event\AfterProcessingMessageEvent;
 use OldSound\RabbitMqBundle\Event\BeforeProcessingMessageEvent;
 use OldSound\RabbitMqBundle\Event\OnConsumeEvent;
 use OldSound\RabbitMqBundle\Event\OnIdleEvent;
+use PhpAmqpLib\Connection\AMQPConnection;
+use PhpAmqpLib\Channel\AMQPChannel;
 use OldSound\RabbitMqBundle\RabbitMq\Consumer;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use OldSound\RabbitMqBundle\RabbitMq\ConsumerInterface;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface as ContractsEventDispatcherInterface;
 
 class ConsumerTest extends TestCase
@@ -23,14 +25,14 @@ class ConsumerTest extends TestCase
 
     protected function prepareAMQPConnection()
     {
-        return $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+        return $this->getMockBuilder(AMQPConnection::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
 
     protected function prepareAMQPChannel()
     {
-        return $this->getMockBuilder('\PhpAmqpLib\Channel\AMQPChannel')
+        return $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -39,6 +41,10 @@ class ConsumerTest extends TestCase
      * Check if the message is requeued or not correctly.
      *
      * @dataProvider processMessageProvider
+     *
+     * @param      $processFlag
+     * @param null $expectedMethod
+     * @param null $expectedRequeue
      */
     public function testProcessMessage($processFlag, $expectedMethod = null, $expectedRequeue = null)
     {
@@ -60,14 +66,14 @@ class ConsumerTest extends TestCase
             $amqpChannel->expects($this->any())
                 ->method('basic_reject')
                 ->will($this->returnCallback(function ($delivery_tag, $requeue) use ($expectedMethod, $expectedRequeue) {
-                    Assert::assertSame($expectedMethod, 'basic_reject'); // Check if this function should be called.
-                    Assert::assertSame($requeue, $expectedRequeue); // Check if the message should be requeued.
+                    $this->assertEquals($expectedMethod, 'basic_reject'); // Check if this function should be called.
+                    $this->assertEquals($requeue, $expectedRequeue); // Check if the message should be requeued.
                 }));
 
             $amqpChannel->expects($this->any())
                 ->method('basic_ack')
                 ->will($this->returnCallback(function ($delivery_tag) use ($expectedMethod) {
-                    Assert::assertSame($expectedMethod, 'basic_ack'); // Check if this function should be called.
+                    $this->assertEquals($expectedMethod, 'basic_ack'); // Check if this function should be called.
                 }));
         } else {
             $amqpChannel->expects($this->never())->method('basic_reject');
@@ -75,11 +81,11 @@ class ConsumerTest extends TestCase
             $amqpChannel->expects($this->never())->method('basic_nack');
         }
         if (is_subclass_of('AMQPEvent', 'ContractsBaseEvent')) {
-            $eventDispatcher = $this->getMockBuilder('Symfony\Contracts\EventDispatcher\EventDispatcherInterface')
+            $eventDispatcher = $this->getMockBuilder(ContractsEventDispatcherInterface::class)
                 ->disableOriginalConstructor()
                 ->getMock();
         } else {
-            $eventDispatcher = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcherInterface')
+            $eventDispatcher = $this->getMockBuilder(EventDispatcherInterface::class)
                 ->disableOriginalConstructor()
                 ->getMock();
         }
@@ -110,15 +116,15 @@ class ConsumerTest extends TestCase
 
     public function processMessageProvider()
     {
-        return array(
-            array(null, 'basic_ack'), // Remove message from queue only if callback return not false
-            array(true, 'basic_ack'), // Remove message from queue only if callback return not false
-            array(false, 'basic_reject', true), // Reject and requeue message to RabbitMQ
-            array(ConsumerInterface::MSG_ACK, 'basic_ack'), // Remove message from queue only if callback return not false
-            array(ConsumerInterface::MSG_REJECT_REQUEUE, 'basic_reject', true), // Reject and requeue message to RabbitMQ
-            array(ConsumerInterface::MSG_REJECT, 'basic_reject', false), // Reject and drop
-            array(ConsumerInterface::MSG_ACK_SENT), // ack not sent by the consumer but should be sent by the implementer of ConsumerInterface
-        );
+        return [
+            [null, 'basic_ack'], // Remove message from queue only if callback return not false
+            [true, 'basic_ack'], // Remove message from queue only if callback return not false
+            [false, 'basic_reject', true], // Reject and requeue message to RabbitMQ
+            [ConsumerInterface::MSG_ACK, 'basic_ack'], // Remove message from queue only if callback return not false
+            [ConsumerInterface::MSG_REJECT_REQUEUE, 'basic_reject', true], // Reject and requeue message to RabbitMQ
+            [ConsumerInterface::MSG_REJECT, 'basic_reject', false], // Reject and drop
+            [ConsumerInterface::MSG_ACK_SENT], // ack not sent by the consumer but should be sent by the implementer of ConsumerInterface
+        ];
     }
 
     /**
@@ -126,22 +132,22 @@ class ConsumerTest extends TestCase
      */
     public function consumeProvider()
     {
-        $testCases["All ok 4 callbacks"] = array(
-            array(
-                "messages" => array(
+        $testCases["All ok 4 callbacks"] = [
+            [
+                "messages" => [
                     "msgCallback1",
                     "msgCallback2",
                     "msgCallback3",
                     "msgCallback4",
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
-        $testCases["No callbacks"] = array(
-            array(
-                "messages" => array()
-            )
-        );
+        $testCases["No callbacks"] = [
+            [
+                "messages" => []
+            ]
+        ];
 
         return $testCases;
     }

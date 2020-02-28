@@ -4,6 +4,8 @@ namespace OldSound\RabbitMqBundle\Tests\Event;
 
 use OldSound\RabbitMqBundle\Event\AfterProcessingMessageEvent;
 use OldSound\RabbitMqBundle\RabbitMq\Consumer;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\TestCase;
 
@@ -17,10 +19,10 @@ class AfterProcessingMessageEventTest extends TestCase
     protected function getConsumer()
     {
         return new Consumer(
-            $this->getMockBuilder('\PhpAmqpLib\Connection\AMQPConnection')
+            $this->getMockBuilder(AMQPConnection::class)
                 ->disableOriginalConstructor()
                 ->getMock(),
-            $this->getMockBuilder('\PhpAmqpLib\Channel\AMQPChannel')
+            $this->getMockBuilder(AMQPChannel::class)
                 ->disableOriginalConstructor()
                 ->getMock()
         );
